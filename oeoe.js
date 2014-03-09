@@ -117,23 +117,40 @@
         }
         for (var i=0, l = imgLinks.length; i<l; i++){
             var linker = document.createElement("center");
+            var showImageChoos = document.createElement("div");
+            showImageChoos.innerHTML = "Bild-Link mitgeschickt. Klick zum Ansehen.";
+            showImageChoos.className = "showImageChoos";
+            showImageChoos.setAttribute("url", imgLinks[i].replace(/@@/g, ""))
+            showImageChoos.onclick = function(){
+                this.nextSibling.src = this.getAttribute("url");
+                this.nextSibling.style.width = "280px";
+            };
+            linker.appendChild(showImageChoos);
             var img = document.createElement("img");
-            img.src = imgLinks[i].replace(/@@/g, "");
-            img.style.width = "280px";
             linker.appendChild(img);
             img.addEventListener("load", scrollDown, false);
             parentNode.appendChild(linker);
         }
         for (var i=0, l = mediaLinks.length; i<l; i++){
-            var linker = document.createElement("div");
-            linker.style.overflow = "hidden";
+            var linker = document.createElement("center");
             var idx = (mediaLinks[i].lastIndexOf("=")>mediaLinks[i].length-20)?mediaLinks[i].lastIndexOf("="):mediaLinks[i].lastIndexOf("/"); 
             var videolink = '<center><iframe src="//www.youtube.com/embed/' + mediaLinks[i].substring(idx+1,mediaLinks[i].length-2) + '" width="280px" height="auto"></iframe></center>';
-            linker.innerHTML = videolink;
+            var showImageChoos = document.createElement("div");
+            showImageChoos.innerHTML = "Youtube-Link mitgeschickt. Klick zum Ansehen.";
+            showImageChoos.className = "showImageChoos";
+            linker.style.overflow = "hidden";
+            showImageChoos.setAttribute("videolink", videolink)
+            showImageChoos.onclick = function(){
+                // console.log(mediaLinks[i], idx, videolink)
+                this.className = "";
+                linker.innerHTML = this.getAttribute("videolink");
+            };
+            linker.appendChild(showImageChoos);
             parentNode.appendChild(linker);
         }
         return true;
     }
+
 
     function appendMssg(msg, client, zeit, parentNode){
         if (typeof(msg)=="undefined" || !msg || msg.length === 0) 
