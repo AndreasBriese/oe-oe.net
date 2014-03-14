@@ -575,7 +575,6 @@
                 msg = ((!!userNick)?(userNick + "__"):"") +  msg;
                 var mkey = (sKey||siteKey)+sessKey;
                 var cmsg = CryptoJS.Rabbit.encrypt(msg, mkey);
-                var dcmsg = CryptoJS.Rabbit.decrypt(cmsg, mkey);
                 lKey = sha(((((sha(outMssgNum)+cmsg.salt.words[0]).concat(cmsg.salt.words[1] || cmsg.salt.words[0]).concat(cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]))).concat(cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0])).concat(cmsg.salt.words[4] || cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]));                cmsg = LZString2.compressToBase64(JSON.stringify([cmsg.ciphertext.words, cmsg.ciphertext.sigBytes, cmsg.salt.words, cmsg.salt.sigBytes]));
                 websocket.send(cmsg.length + '#' + cmsg);
                 if(showMessage(msg, true, false))
