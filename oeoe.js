@@ -290,8 +290,7 @@
                                 } catch(e) {
                                     throw e;
                                 }
-                                sKey = sha(((((sha(inMssgNum)+msg.words[0]).concat(msg.words[1] || msg.words[0]).concat(msg.words[2] || msg.words[1] || msg.words[0]))).concat(msg.words[3] || msg.words[2] || msg.words[1] || msg.words[0])).concat(msg.words[4] || msg.words[3] || msg.words[2] || msg.words[1] || msg.words[0]));
-                                msg = msg.toString(CryptoJS.enc.Utf8);
+                                sKey = sha(((((sha(inMssgNum)+cmsg[2][0]).concat(cmsg[2][1] || cmsg[2][0]).concat(cmsg[2][2] || cmsg[2][1] || cmsg[2][0]))).concat(cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0])).concat(cmsg[2][4] || cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0]));                                msg = msg.toString(CryptoJS.enc.Utf8);
                             }catch(e){
                                 websocket.send('!!!DISCONNECT!');
                                 websocket.close();
@@ -577,8 +576,7 @@
                 var mkey = (sKey||siteKey)+sessKey;
                 var cmsg = CryptoJS.Rabbit.encrypt(msg, mkey);
                 var dcmsg = CryptoJS.Rabbit.decrypt(cmsg, mkey);
-                lKey = sha(((((sha(outMssgNum)+dcmsg.words[0]).concat(dcmsg.words[1] || dcmsg.words[0]).concat(dcmsg.words[2] || dcmsg.words[1] || dcmsg.words[0]))).concat(dcmsg.words[3] || dcmsg.words[2] || dcmsg.words[1] || dcmsg.words[0])).concat(dcmsg.words[4] || dcmsg.words[3] || dcmsg.words[2] || dcmsg.words[1] || dcmsg.words[0]));
-                cmsg = LZString2.compressToBase64(JSON.stringify([cmsg.ciphertext.words, cmsg.ciphertext.sigBytes, cmsg.salt.words, cmsg.salt.sigBytes]));
+                lKey = sha(((((sha(outMssgNum)+cmsg.salt.words[0]).concat(cmsg.salt.words[1] || cmsg.salt.words[0]).concat(cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]))).concat(cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0])).concat(cmsg.salt.words[4] || cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]));                cmsg = LZString2.compressToBase64(JSON.stringify([cmsg.ciphertext.words, cmsg.ciphertext.sigBytes, cmsg.salt.words, cmsg.salt.sigBytes]));
                 websocket.send(cmsg.length + '#' + cmsg);
                 if(showMessage(msg, true, false))
                     delay(scrollDown, 200);
