@@ -290,7 +290,8 @@
                                 } catch(e) {
                                     throw e;
                                 }
-                                sKey = sha(((((sha(inMssgNum)+cmsg[2][0]).concat(cmsg[2][1] || cmsg[2][0]).concat(cmsg[2][2] || cmsg[2][1] || cmsg[2][0]))).concat(cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0])).concat(cmsg[2][4] || cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0]));                                msg = msg.toString(CryptoJS.enc.Utf8);
+                                sKey = sha(((((sha(inMssgNum)+cmsg[2][0]).concat(cmsg[2][1] || cmsg[2][0]).concat(cmsg[2][2] || cmsg[2][1] || cmsg[2][0]))).concat(cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0])).concat(cmsg[2][4] || cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0]));
+                                msg = msg.toString(CryptoJS.enc.Utf8);
                             }catch(e){
                                 websocket.send('!!!DISCONNECT!');
                                 websocket.close();
