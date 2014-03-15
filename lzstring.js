@@ -19,12 +19,12 @@ var LZString2 = {
   
   compressToBase64 : function (input) {
     if (input === null) return "";
+    input = this.compress(input);
+    
     var output = "",
         chr1, chr2, chr3, enc1, enc2, enc3, enc4,
         i = 0,
         l = input.length;
-    
-    input = this.compress(input);
     
     for (;i < l*2;) {
       
