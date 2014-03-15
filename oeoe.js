@@ -688,12 +688,7 @@
         try{
             websocket = new WebSocket(sock);
         }catch(e){
-            try{
-                sock = sock.replace(/wss:/i,"ws:");
-                websocket = new WebSocket(sock);
-            }catch(e){
-                console.log(e);
-            }
+            console.log(e);
         }
         websocket.onclose = onClose;
         document.onclose = function(){
