@@ -475,7 +475,7 @@
                         showUpload(msgs, url, type);
                     }
                     // safari
-                    if(navigator.info[0].search(/safari/i)!=-1&&navigator.mobile){}else{
+                    if(navigator.info[0].search(/safari/i)!=-1&&navigator.mobile&&!(navigator.userAgent.match(/ipad|tablet|android/i))){}else{
                         link.setAttribute("download", name);
                         link.href = url;
                         link.addEventListener("click", function(){
