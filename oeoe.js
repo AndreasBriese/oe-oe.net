@@ -521,6 +521,14 @@
                     obj.setAttribute("type", type);
                     obj.setAttribute("width","360");
                     obj.setAttribute("height","360");
+                }else if(type.search(/audio/i)!==-1){
+                    var obj = document.createElement("audio");
+                    obj.setAttribute("src", encodeURI(url));
+                    obj.setAttribute("controls","");
+                    // obj.setAttribute("sandbox", "");
+                    obj.setAttribute("type", type);
+                    obj.setAttribute("width","360");
+                    obj.setAttribute("height","360");
                 }else {
                     var obj = document.createElement("object");
                     obj.setAttribute("data", encodeURI(url));
@@ -792,12 +800,19 @@
         var xhr = new XMLHttpRequest(),
             formData = new FormData();
         formData.append("locker", sha(passPhrase)+recv);
-        console.log(sha(passPhrase)+recv);
         xhr.open("POST", "https://{{.XHR}}/chatlocker", true);
         xhr.onreadystatechange = function() {
             if (this.readyState == 4) {
                if(this.getResponseHeader("Content-Type")==="text/plain; charset=utf-8"){ 
-                   // todo 
+                   if(this.responseText.length === 6 && this.responseText != recv){
+                        recv = this.responseText;
+                        overlay.innerHTML = "";
+                        var oo = document.createElement("div");
+                        oo.innerHTML += 'Hallo <i style="font-family:Arial,sans-serif;font-size:104%;color:rgba(0,150,0,1.0);">"' + userNick + '"</i><br/><span style="line-height:20px;margin-left:2px;color:rgba(0,150,0,1.0);"><br/>Dein Chat-Kanal kann jetzt aus dem chatlocker durch die Eingabe des Schl&uuml;sselsatzes ge&ouml;ffnet werden!</span><p style="font-family:Arial,sans-serif;font-size:12px;margin-left:2px;">Bedenke bitte, dass dieser Kanal um 24:00 Uhr ung&uuml;ltig wird!</p><div style="margin-top:4px;border:1px solid green;text-weight:700;padding:2px;margin-left:10px">Achtung! Wenn Du das Fenster schliesst, wird Dein Kanal geschlossen!</div>';
+                        overlay.appendChild(oo);
+                   }else{
+                        alert("Nimm bitte einen anderen Schluesselsatz.") 
+                   }
                };
             }
         };
