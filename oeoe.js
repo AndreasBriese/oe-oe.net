@@ -384,10 +384,11 @@
                     if(sp.length>619){
                         overlay.innerHTML = "";
                         if(cllr){
-                            websocket.send(sp);
+                            if (checkPrime(sp.substr(3))) websocket.send(sp);
+                        }else{
+                            sessPrime = str2bigInt(sp.substr(3),10);
                         }
-                        sessPrime = sp.substr(3);
-                        sessKey = sha(sessPrime);
+                        sessKey = sha(sp.substr(3) + ((cllr)?"?"+recv:recv));
                         sp = "";
                         if (dhKeys(sessPrime)) {
                             var mkey = siteKey+sessKey;
@@ -677,17 +678,40 @@
         return true;
     }
 
-    function dhKeys(sPrime){
-        if(!!warten()){
+    var checkPrime = function(sPrime){
+        sessPrime = str2bigInt(sPrime,10);
+       if(sPrime==="6235637614689853137811147902291940808362989854651610607543808836333396623409952890054624681710017175049552853064558764019509186253594413302714648581439896987065642863539806965127351795766155955169041923794772291436209939177699319835826242128477295221079911985631169822292956069521884480675638090526231675231366516942463835765073399909290631753149477338480124473181609331374597386647302929217943801655829801100898356289178758082404149487109627401972208708949574445466105457989637482651449712028317975483147234391490528814950214116810456840825004024142695406803991099559159914763474992105538484604498806406458274126415779") return true;
+        try{
+            var st = (new Date).getTime(),
+                _l = sessPrime.length,
+                _rounds = 40,
+                _rpprb = new Array(_l);
+            if(bitSize(sessPrime)<2056||greater(int2bigInt(0,1),sessPrime))throw "bitsize";
+            if(modInt(addInt(sessPrime,1),6)!==0 && modInt(addInt(sessPrime,-1),6)!==0) throw "6k+-1: no prime";
+            if(modInt(sessPrime,12)!==11)throw "sp mod 12 != 11";
+            _rpprb = randBigInt(2054);
+            _sophieGermainPrime = addInt(sessPrime,-1);
+            rightShift_(_sophieGermainPrime,1);
+            _sgpStr = bigInt2str(_sophieGermainPrime,10);
+            if(_sgpStr[_sgpStr.length-1]===7)throw "SG ends on 7";
+            if(modInt(_sophieGermainPrime,6)!==5)throw "SG mod 6 != 5";
+            if (!millerRabin(_sophieGermainPrime,_rpprb)) throw "SG !mr";
+            _rpprb = randBigInt(2055);
+            if (!millerRabin(sessPrime,_rpprb)) throw "!mr";
+        }catch(e){
+            if(websocket.readyState===websocket.OPEN){
+                websocket.send('!!!DISCONNECT!');
+                websocket.close();
+                console.log(bigInt2str(sessPrime, 10), "is no save prime");
+                alert(e + ' illegal DH param');
+                return false;
+            }
+        }
+        return true;
+    };
+
+    function dhKeys(sessPrime){
             try{
-                sessPrime = str2bigInt(sPrime, 10, 200);
-                if(bitSize(sessPrime)<2056){
-                    if(websocket.readyState===websocket.OPEN){
-                        websocket.send('!!!DISCONNECT!');
-                        websocket.close();
-                        alert('illegal DH param')
-                    }
-                }
                 sessSecret = int2bigInt(0, 1);
                 for(;(bitSize(sessSecret)<370&&(greater(sessPrime, sub(sessSecret,int2bigInt(2, 1)))));){
                     sessSecret = randBigInt(primeBits, 0);
@@ -700,7 +724,6 @@
                 throw e;
                 return false;
             }
-        }
     }
 
     function dhExchge(pKey){
