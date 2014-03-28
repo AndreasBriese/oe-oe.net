@@ -736,14 +736,13 @@
             alert("Unsichere Schluesselsequenz! Sitzung wird abgebrochen!");
         }
         cipherKey = powMod(partnerKey, sessSecret, sessPrime);
-        sessKey = sha(bigInt2str(cipherKey, 10));
-        //console.log("ourSecret:", cipherKey);
-        var l = cipherKey.length-2;
-        var ba = new ArrayBuffer(2*l);
-        var ab = new Uint16Array(ba);
-        for(;l;ab[--l]=cipherKey[l]){}
-        cipherKey = new Uint8Array(ba);
-        //console.log("compare:", cipherKey, ab);
+        sessKey = sha(bigInt2str(cipherKey, 64));
+        var l = cipherKey.length-15,
+            i = 0,
+            ba = new ArrayBuffer(2*l),
+            ab = new Uint16Array(ba);
+        for(;l;ab[--l]=(Math.PI*cipherKey[l+10])^(Math.PI*cipherKey[i++])) {}
+        cipherKey = new Uint8ClampedArray(ba);
         sessSecret = null;
         websocket.send(":::"+bigInt2str(sessPrime,10));
         if(!cllr) nickPopUP();
