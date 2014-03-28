@@ -366,10 +366,10 @@
             C32 = [], 
             C8 = []; 
         for(;i<32;){
-            C32.push(cipherKey[(idx+i++)%(cipherKey.length-30)]);
+            C32.push(cipherKey[(idx+i++)%(cipherKey.length)]);
         }
         for(;i<40;){
-            C8.push(cipherKey[(idx+i++)%(cipherKey.length-30)]);
+            C8.push(cipherKey[(idx+i++)%(cipherKey.length)]);
         }
         return [C32,C8]
     };
