@@ -295,14 +295,22 @@
                                 } catch(e) {
                                     throw e;
                                 }
-                                sKey = sha(((((sha(inMssgNum)+cmsg[2][0]).concat(cmsg[2][1] || cmsg[2][0]).concat(cmsg[2][2] || cmsg[2][1] || cmsg[2][0]))).concat(cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0])).concat(cmsg[2][4] || cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0]));
+                                sKey = sha(((((sha(inMssgNum) + cmsg[2][0]).concat(cmsg[2][1] || cmsg[2][0]).concat(cmsg[2][2] || cmsg[2][1] || cmsg[2][0]))).concat(cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0])).concat(cmsg[2][4] || cmsg[2][3] || cmsg[2][2] || cmsg[2][1] || cmsg[2][0]));
                                 msg = msg.toString(CryptoJS.enc.Utf8);
-                            }catch(e){
-                                websocket.send('!!!DISCONNECT!');
-                                websocket.close();
-                                //console.log(e);
-                                alert("Connection down !\nBei langsamen Netzverbindungen (z.B. Tor, JonDonym, FreeProxies) bitte unter about:config die Einstellung network.websocket.timeout.open und .close auf 1000 hochsetzen.");
-                                return;
+                                var mac = msg.substr(msg.length - 64),
+                                    macEqual = 0;
+                                msg = msg.substr(0, msg.length - 64);
+                                for (var i = 64, shaMSG = sha(msg); i > 0; macEqual |= mac[--i] ^ shaMSG[i]) {}
+                                if (macEqual != 0) {
+                            	      throw new Error(200, "MAC failed");
+                                }
+                            } catch (e) {
+                               websocket.send('!!!DISCONNECT!');
+                               websocket.close();
+                               //console.log(e);
+                               if(e === "MAC failed")alert("MAC failed; Uebertragung fehlerhaft - Connection down.");
+                               alert("Connection down ! Bei langsamen Netzverbindungen (z.B. Tor, JonDonym, FreeProxies) bitte unter about:config die Einstellung network.websocket.timeout.open und .close auf 1000 hochsetzen.");
+                               return;
                             }
                         }
                     }
@@ -391,11 +399,11 @@
                         sessKey = sha(sp.substr(3) + ((cllr)?"?"+recv:recv));
                         sp = "";
                         if (dhKeys(sessPrime)) {
-                            var mkey = siteKey+sessKey;
-                            var cmsg = CryptoJS.Rabbit.encrypt(publicKey, mkey);
-                            cmsg = LZString2.compressToBase64(JSON.stringify([cmsg.ciphertext.words, cmsg.ciphertext.sigBytes, cmsg.salt.words, cmsg.salt.sigBytes]));
+                            var mkey = siteKey + sessKey;
+                            var cmsg = CryptoJS.Rabbit.encrypt(publicKey + sha(publicKey), mkey);
+                            cmsg = LZBA.compressToBase64(JSON.stringify([cmsg.ciphertext.words, cmsg.ciphertext.sigBytes, cmsg.salt.words, cmsg.salt.sigBytes]));
                             websocket.send(cmsg.length + '#' + cmsg);
-                        } else{
+                        } else {  
                             websocket.send('!!!DISCONNECT!');
                             websocket.close();
                         }
@@ -591,26 +599,25 @@
     }
 
     function sendMessage() {
-        if(multiFrame){
+      if (multiFrame) {
             delay(sendMessage, 100);
-        } else {
+      } else {
             var msg = input.value;
-            input.value = "";
-            if(!!msg){
-                outMssgNum++;
-                msg = ((!!userNick)?(userNick + "__"):"") +  msg;
-                var mkey = (sKey||siteKey)+sessKey;
-                var cmsg = CryptoJS.Rabbit.encrypt(msg, mkey);
-                lKey = sha(((((sha(outMssgNum)+cmsg.salt.words[0]).concat(cmsg.salt.words[1] || cmsg.salt.words[0]).concat(cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]))).concat(cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0])).concat(cmsg.salt.words[4] || cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]));
-                cmsg = LZString2.compressToBase64(JSON.stringify([cmsg.ciphertext.words, cmsg.ciphertext.sigBytes, cmsg.salt.words, cmsg.salt.sigBytes]));
-                websocket.send(cmsg.length + '#' + cmsg);
-                if(showMessage(msg, true, false))
-                    delay(scrollDown, 200);
-            }else if(!navigator.mobile){
-                input.focus();
-            };
-        }
-        return true;
+          input.value = "";
+          if (!!msg) {
+            outMssgNum++;
+            msg = ((!!userNick) ? (userNick + "__") : "") + msg;
+            var mkey = (sKey || siteKey) + sessKey,
+                cmsg = CryptoJS.Rabbit.encrypt(msg + sha(msg), mkey);
+            lKey = sha(((((sha(outMssgNum) + cmsg.salt.words[0]).concat(cmsg.salt.words[1] || cmsg.salt.words[0]).concat(cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]))).concat(cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0])).concat(cmsg.salt.words[4] || cmsg.salt.words[3] || cmsg.salt.words[2] || cmsg.salt.words[1] || cmsg.salt.words[0]));
+            cmsg = LZBA.compressToBase64(JSON.stringify([cmsg.ciphertext.words, cmsg.ciphertext.sigBytes, cmsg.salt.words, cmsg.salt.sigBytes]));
+            websocket.send(cmsg.length + '#' + cmsg);
+            if (showMessage(msg, true, false)) delay(scrollDown, 200);
+          } else if (!navigator.mobile) {
+            input.focus();
+          };
+      }
+      return true;
     }
 
     var lockerPopUp = function(){
@@ -841,34 +848,56 @@
         xhr.send(formData);
     }
 
-    function sendXHR(data, type, name, url){
-        try{
-            var a = new Uint8Array(data),
-                l = a.length,
-                b = [],
-                blb, 
-                i = 0, j = 0, 
-                idx = randomBitInt(8),
-                encBuf = s20seedBuf(idx),
-                S20 = Salsa20.init(encBuf[0],encBuf[1]);
-            for(;j<7;b.push(recv.charCodeAt(j++)||32)){}
-            b.push(idx);
-            for (j=0;i<120;i++){
-                b.push((name.charCodeAt(j++)||32) ^S20.getBytes(1)[0]);
-            }
-            for (j=0;i<170;i++){
-                b.push((type.charCodeAt(j++)||32)^S20.getBytes(1)[0]);
-            }
-            for(i=0;i<l;b.push(a[i++]^S20.getBytes(1)[0])){}
-            var blb = new Blob( [(new Uint8Array(b))], {type: type});
-            // send via XHR
-            var formData = new FormData();
-            formData.append("dataFile", blb);
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
-            xhr.send(formData);
-        }catch(e){alert("Sorry, upload abgebrochen. War die Datei kleiner als 1 MB?");}
-        showMessage("Datei gesendet.\n"+name+" ("+type+")", true, false);
+    function sendXHR(data, type, name, len, url) {
+         if (type.match(/^(text|secret)/)) {
+             var a = new Uint8Array(data);
+             data = LZBA.compress(a, true);
+         }
+         try {
+             var a = new Uint8Array(data),
+                 l = a.length,
+                 b = [],
+                 blb, i = 0,
+                 j = 0,
+                 mac = new BLAKE2s(32),
+                 macHash,
+                 idx = randomBitInt(8),
+                 encBuf = s20seedBuf(idx),
+                 S20 = Salsa20.init(encBuf[0], encBuf[1]);
+             mac.update(a);
+             for (; j < 65; b.push(recv.charCodeAt(j++) || 32)) {}
+             b.push(idx);
+             macHash = mac.digest();
+             for (j = 0; i < 120; i++) {
+                 b.push((name.charCodeAt(j++) || 32) ^ S20.getBytes(1)[0]);
+             }
+             for (j = 0; i < 170; i++) {
+                 b.push((type.charCodeAt(j++) || 32) ^ S20.getBytes(1)[0]);
+             }
+             for (i = 0; i < l; b.push(a[i++] ^ S20.getBytes(1)[0])) {}
+             for (i = 0; i < 32; b.push(macHash[i++] ^ S20.getBytes(1)[0])){}
+             var blb = new Blob([(new Uint8Array(b))], {
+                 type: type
+             });
+             // send via XHR
+             var formData = new FormData();
+             formData.append("dataFile", blb);
+             var xhr = new XMLHttpRequest();
+             xhr.open('POST', url, true);
+             xhr.onreadystatechange = function () {
+                 if (this.readyState == 4) {
+                     blb = null;
+                     data = null;
+                     formData = null;
+                 }
+             };
+             xhr.send(formData);
+         } catch (e) {
+             alert("Sorry, upload abgebrochen. War die Datei kleiner als 15 MB?");
+         }
+         showMessage("Datei gesendet. " + name + " (" + type + ")\n\n[Rechne mit " + Math.ceil(len*10) + "-" + Math.ceil(len*20) + " sec bis zum Empfang.]", true, false);
+         eingaben.className = "hideEingaben";
+         delay(function(){eingaben.className = "showEingaben";},1000*Math.ceil(len*10));
     }
     
     function uploadFile(url, file){
