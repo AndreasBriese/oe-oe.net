@@ -3,8 +3,8 @@ oe-oe.net
 
 HTML5 client open source code under BSD1 License (not for reselling 7 commercial use)
 
-security model and details:
-<a href="http://xn----0gab.edutoolbox.de/wp-content/uploads/2014/03/oeoeSicherheit.pdf">http://ö-ö.edutoolbox.de/wp-content/uploads/2014/03/oeoeSicherheit.pdf</a>
+updated security model and details:
+<a href="http://xn----0gab.edutoolbox.de/wp-content/uploads/2015/01/oeoeSicherheit2015.pdf">http://xn----0gab.edutoolbox.de/wp-content/uploads/2015/01/oeoeSicherheit2015.pdf</a>
 
 
 notice:
